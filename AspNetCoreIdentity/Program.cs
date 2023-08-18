@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="Program.cs" company="United States Government">
-//   © 2023 United States Government, as represented by the Secretary of the Army.  All rights reserved.
+// <copyright file="Program.cs" company="Sample Company">
+//   © 2023 Sample Company.  All rights reserved.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
