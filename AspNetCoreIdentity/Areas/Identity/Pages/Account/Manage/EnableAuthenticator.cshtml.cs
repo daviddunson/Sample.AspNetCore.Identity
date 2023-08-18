@@ -146,7 +146,7 @@ namespace WebApplication1.Areas.Identity.Pages.Account.Manage
         {
             return string.Format(
                 CultureInfo.InvariantCulture,
-                AuthenticatorUriFormat, this._urlEncoder.Encode("Microsoft.AspNetCore.Identity.UI"), this._urlEncoder.Encode(email),
+                AuthenticatorUriFormat, this._urlEncoder.Encode("Sample Application"), this._urlEncoder.Encode(email),
                 unformattedKey);
         }
 
