@@ -17,10 +17,8 @@ namespace IdentityServer
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            var config = builder.Configuration;
-            var connectionString = config.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-
-            builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             builder.Services.AddDefaultIdentity<IdentityUser>(options => { options.SignIn.RequireConfirmedAccount = true; })
                 .AddEntityFrameworkStores<ApplicationDbContext>();
@@ -28,39 +26,35 @@ namespace IdentityServer
             builder.Services.AddAuthentication()
                 .AddGoogle(options =>
                 {
-                    var google = config.GetSection("Authentication:Google");
+                    var google = builder.Configuration.GetSection("Authentication:Google");
                     options.ClientId = google["ClientId"];
                     options.ClientSecret = google["ClientSecret"];
                 })
                 .AddFacebook(options =>
                 {
-                    var facebook = config.GetSection("Authentication:Facebook");
+                    var facebook = builder.Configuration.GetSection("Authentication:Facebook");
                     options.ClientId = facebook["ClientId"];
                     options.ClientSecret = facebook["ClientSecret"];
                 })
                 .AddMicrosoftAccount(options =>
                 {
-                    var microsoft = config.GetSection("Authentication:Microsoft");
+                    var microsoft = builder.Configuration.GetSection("Authentication:Microsoft");
                     options.ClientId = microsoft["ClientId"];
                     options.ClientSecret = microsoft["ClientSecret"];
                 })
                 .AddTwitter(options =>
                 {
-                    var twitter = config.GetSection("Authentication:Twitter");
+                    var twitter = builder.Configuration.GetSection("Authentication:Twitter");
                     options.ConsumerKey = twitter["ConsumerKey"];
                     options.ConsumerSecret = twitter["ConsumerSecret"];
                     options.RetrieveUserDetails = true;
                 });
 
-            builder.Services.AddIdentityServer(options =>
-                {
-                    options.UserInteraction.LoginUrl = "/Identity/Account/Login";
-                    options.UserInteraction.LogoutUrl = "/Identity/Account/Logout";
-                })
+            builder.Services.AddIdentityServer()
                 .AddSigningCredential(builder.Configuration)
                 .AddClientStore<ClientStore>()
                 .AddResourceStore<ResourceStore>()
-                .AddProfileService<ProfileService>()
+                .AddAspNetIdentity<IdentityUser>()
                 .AddAppAuthRedirectUriValidator();
 
             builder.Services.AddRazorPages();
@@ -71,9 +65,7 @@ namespace IdentityServer
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseIdentityServer();
-
             app.MapRazorPages();
-            app.MapGet("/", () => "Identity Server");
 
             app.Run();
         }
