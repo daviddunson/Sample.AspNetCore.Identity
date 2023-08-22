@@ -6,6 +6,7 @@
 
 namespace IdentityServer
 {
+    using System.Reflection;
     using IdentityServer.Data;
     using IdentityServer.Services;
     using Microsoft.AspNetCore.Identity;
@@ -16,12 +17,13 @@ namespace IdentityServer
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            var migrationsAssembly = typeof(Program).GetTypeInfo().Assembly.GetName().Name;
 
-            builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            builder.Services.AddDbContext<ApplicationIdentityDbContext>(options =>
+                options.UseSqlServer(builder.Configuration.GetConnectionString("IdentityConnection")));
 
             builder.Services.AddDefaultIdentity<IdentityUser>(options => { options.SignIn.RequireConfirmedAccount = true; })
-                .AddEntityFrameworkStores<ApplicationDbContext>();
+                .AddEntityFrameworkStores<ApplicationIdentityDbContext>();
 
             builder.Services.AddAuthentication()
                 .AddGoogle(options =>
@@ -51,11 +53,22 @@ namespace IdentityServer
                 });
 
             builder.Services.AddIdentityServer()
+                .AddAppAuthRedirectUriValidator()
                 .AddSigningCredential(builder.Configuration)
-                .AddClientStore<ClientStore>()
-                .AddResourceStore<ResourceStore>()
                 .AddAspNetIdentity<IdentityUser>()
-                .AddAppAuthRedirectUriValidator();
+                .AddConfigurationStore(options =>
+                {
+                    options.ConfigureDbContext = b => b.UseSqlServer(
+                        builder.Configuration.GetConnectionString("ConfigurationConnection"),
+                        sql => sql.MigrationsAssembly(migrationsAssembly));
+                })
+                .AddOperationalStore(options =>
+                {
+                    options.ConfigureDbContext = b => b.UseSqlServer(
+                        builder.Configuration.GetConnectionString("OperationConnection"),
+                        sql => sql.MigrationsAssembly(migrationsAssembly));
+                    options.EnableTokenCleanup = true;
+                });
 
             builder.Services.AddRazorPages();
 
